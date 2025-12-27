@@ -4,4 +4,4 @@ We use the pruned Stable Diffusion v1.5 model from the [IDM](https://github.com/
 
 - `model.py`
 - `forward.py`
-- `backward.py`
+- `backprop.py`
