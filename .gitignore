@@ -1,0 +1,49 @@
+# Python bytecode
+__pycache__/
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# PyTorch specific
+*.pt
+*.pth
+
+# Project specific directories
+weight*
+
+# log/
+result/*
+results/*
+tensorboard_logs/*
+
+# Dataset files
+data/*
+sd-legacy/*
+
+# Jupyter notebook
+.ipynb_checkpoints/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+tmp/
+
+# Backup files
+*~
+*.bak
