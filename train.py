@@ -83,7 +83,7 @@ if rank == 0:
     print("Number of GPUs =", world_size)
 
 # Training Configs
-iter_num = 2
+iter_num = 1000
 N = B * B
 q = int(np.ceil(ratio * N))
 
