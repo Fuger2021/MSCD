@@ -5,7 +5,7 @@ MSCD: Multi-Solution Collaborative Diffusion Model for Image Compressed Sensing
 Read in other languages: [[中文](README_zh-CN.md)]
 
 [![Hugging Face](https://img.shields.io/badge/Hugging%20Face-MSCD-ff9000?logo=huggingface)](https://huggingface.co/Miyamura-Isumi/MSCD)
-![GitHub repo size](https://img.shields.io/github/repo-size/Fuger2021/MSCD)
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/Fuger2021/MSCD)
 ![GitHub](https://img.shields.io/github/license/Fuger2021/MSCD)
 ![GitHub last commit](https://img.shields.io/github/last-commit/Fuger2021/MSCD)
 </div>
