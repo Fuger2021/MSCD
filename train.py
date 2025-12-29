@@ -4,7 +4,7 @@ import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
 import numpy as np
 from argparse import ArgumentParser
-from MSCD.models.MSCD import Net
+from MSCD.models.unet import Net
 from MSCD.utils.utils import *
 from skimage.metrics import structural_similarity as ssim
 from time import time

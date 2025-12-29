@@ -9,10 +9,18 @@ from .SD_v1_5.backprop import RevModule, VanillaBackProp, RevBackProp
 from .SD_v1_5.model import Injector, Step, Net as BaseNet
 
 
-# configs
+# Number of solutions
 S = 28
+
+# Number of channels inside SSGs
 C = 32
+
+# Number of Res blocks inside SSGs
 Q = 3
+
+# Enable ChannelAttn (Only for ablation, False by default)
+# Not used in the current implementation
+USE_ATTN = False
 
 
 class My:
@@ -122,7 +130,10 @@ class My:
                 prev_alpha_bar = alpha_bar[t-1]
 
                 # 0. Noise Estimation
-                e = F.pixel_shuffle(unet(F.pixel_unshuffle(x, 2)), 2)
+                if USE_ATTN:
+                    e = F.pixel_shuffle(unet(x), 2)
+                else:
+                    e = F.pixel_shuffle(unet(F.pixel_unshuffle(x, 2)), 2)
                 
                 # 1. Denoising
                 x = (x - (1 - cur_alpha_bar).pow(0.5) * e) / cur_alpha_bar.pow(0.5)
@@ -170,15 +181,47 @@ class My:
             self.unet = unet
             self.fusion = nn.Conv2d(S, 1, kernel_size=1, bias=True)
 
+            self.unet_attn_handler()
             self.unet_add_down_rev_modules_and_injectors(T)
             self.unet_add_up_rev_modules_and_injectors(T)
             self.unet_remove_resnet_time_emb_proj()
             self.unet_remove_cross_attn()
             self.unet_set_inplace_to_true()
-            self.unet_replace_forward_methods()
+            self.unet_forward_handler()
 
             # Use a pair of Conv2d instead of VAEs for encoding and decoding
             self.unet_set_conv_io()
+
+        def unet_attn_handler(self):
+            if USE_ATTN:
+                from .attention import unet_set_resnet_attn, unet_add_channel_attn
+                
+                # Apply ChannelAttn for ResnetBlock2D
+                unet_set_resnet_attn(self)
+                
+                # Apply ChannelAttn for UNet2DConditionModel
+                unet_add_channel_attn(self, channels=S)
+
+        def unet_forward_handler(self):
+            """
+            Replace forward() methods for modules in unet.
+
+            When USE_ATTN=True, the replace_attn_forward() is performed
+            to apply our own UNet2DConditionModel and ResnetBlock2D.
+            """
+
+            self.unet_replace_forward_methods()
+
+            if USE_ATTN:
+                from diffusers.models.resnet import ResnetBlock2D
+                from .attention import ResBlock_forward_with_attn, UNet_forward_with_attn
+
+                def replace_attn_forward(module):
+                    if isinstance(module, ResnetBlock2D):
+                        module.forward = types.MethodType(ResBlock_forward_with_attn, module)
+                
+                self.unet.apply(replace_attn_forward)
+                self.unet.forward = types.MethodType(UNet_forward_with_attn, self.unet)
 
         def unet_set_conv_io(self):
             ori_conv_in = self.unet.conv_in
@@ -253,11 +296,13 @@ class My:
             result = main_out + merge_scales * aux_out
             result = result.reshape(b, sc, h, w)
 
-            # fusion X to x
+            # Fusion X to x
             return self.fusion(result)
 
         BaseNet.__init__ = __init__
         BaseNet.forward = forward
+        BaseNet.unet_attn_handler = unet_attn_handler
+        BaseNet.unet_forward_handler = unet_forward_handler
         BaseNet.unet_set_conv_io = unet_set_conv_io
 
         return BaseNet
